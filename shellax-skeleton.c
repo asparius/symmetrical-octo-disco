@@ -53,6 +53,76 @@ void print_command(struct command_t * command)
  * @param  command [description]
  * @return         [description]
  */
+
+void io_handler(struct command_t * command){
+
+	int redirect_index = 0;
+	while(redirect_index < 3){
+
+		if(command->redirects[redirect_index] != NULL){
+			break;	
+		}
+
+		redirect_index++;
+	}
+	print_command(command);
+	printf("%s\n",command->args[command->arg_count -1]);
+
+}
+int process_command(struct command_t *command);
+
+int pipe_handler(struct command_t *command) {
+    int fd[2];
+    int intfd;    
+    int com_number = 0;
+
+    struct command_t *currCommand = command;
+
+    while (currCommand != NULL) {
+        //printf("It is working %d\n", processCounter);
+        
+        if (pipe(fd) == -1) {
+            perror("pipe failed!");
+        }
+        
+
+        
+        pid_t pid = fork();
+
+        if (pid == -1) {
+            perror("fork failed");
+            return UNKNOWN;
+        }
+        else if (pid == 0) {
+            
+            if (com_number != 0) {
+                // stdin
+                dup2(intfd, 0);
+            }
+            
+            if (currCommand->next != NULL) {
+                // stdout
+                dup2(fd[1], 1);
+            }
+            
+            process_command(currCommand);
+            exit(0);
+        }
+        else {
+            wait(0);
+            intfd = fd[0];
+            close(fd[1]);
+            
+	}
+        
+        currCommand = currCommand->next;
+        com_number++;
+
+    }
+
+	return SUCCESS;
+    }
+				
 int free_command(struct command_t *command)
 {
 	if (command->arg_count)
@@ -302,7 +372,7 @@ int prompt(struct command_t *command)
     tcsetattr(STDIN_FILENO, TCSANOW, &backup_termios);
   	return SUCCESS;
 }
-int process_command(struct command_t *command);
+
 int main()
 {
 	while (1)
@@ -313,8 +383,8 @@ int main()
 		int code;
 		code = prompt(command);
 		if (code==EXIT) break;
-
-		code = process_command(command);
+	
+		code = pipe_handler(command);
 		if (code==EXIT) break;
 
 		free_command(command);
