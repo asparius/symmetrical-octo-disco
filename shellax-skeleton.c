@@ -6,6 +6,9 @@
 #include <string.h>
 #include <stdbool.h>
 #include <errno.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <dirent.h>
 const char * sysname = "shellax";
 
 enum return_codes {
@@ -69,6 +72,148 @@ void io_handler(struct command_t * command){
 	printf("%s\n",command->args[command->arg_count -1]);
 
 }
+
+int wiseman(struct command_t * command){
+
+
+	if(command->args[0] == NULL){
+
+		
+		printf("Invalid input\n");
+		printf("Wiseman is busy, enter a interval\n");
+		return SUCCESS;
+	
+	}
+	else{
+		
+		char *interval = command->args[0];
+		char min[120] = "*/";
+		strcat(min,interval);
+		char *rem = " * * * * fortune -a | espeak\n";
+		strcat(min,rem);
+		
+		FILE *fp;
+		fp = fopen("a.txt", "w+");
+        	fputs(min, fp);
+		fclose(fp);
+		system("crontab a.txt");
+		remove("a.txt");				
+	
+	
+
+
+		return SUCCESS;
+
+
+	}	
+
+
+}
+
+int chatroom(struct command_t * command){
+
+	char * room = command->args[0];
+	char * user = command -> args[1];
+	char roompath[512] = "/tmp/";
+	char userpath[512];
+	int fd;
+	DIR *d;
+	struct dirent *dir;
+	
+	int fifo_counter = 0;
+
+			
+	strcat(roompath,room);
+	d = opendir(roompath);	
+	strcat(roompath,"/");
+	struct stat st = {0};
+	
+    	if (stat(roompath, &st) == -1) {
+      
+          mkdir(roompath, 0700);
+      	}
+	strcpy(userpath,roompath);
+	strcat(userpath,user);
+	if(mkfifo(userpath,0777) == -1){
+		if (errno != EEXIST) {
+            		printf("Could not create fifo file\n");
+            		return 1;
+        		}
+	
+	}
+	printf("Welcome to comp304!\n");	
+	
+	
+	if (fork() == 0){
+		while(1){
+			
+			char buffer[128];
+			/*
+			fifo_counter = 0;	
+			if(d){
+				while((dir =readdir(d)) != NULL){
+					fifo_counter++;
+					
+				}
+
+			}
+			
+			if(fifo_counter - 2  == 1){
+				exit(0);
+			}
+			*/ 
+			fd = open(userpath, O_RDONLY);	
+			read(fd,buffer,128);
+			buffer[127] = "\0";
+			printf("%s",buffer);
+			close(fd);
+			
+		}
+	}
+	else{
+		while(1){
+			
+			char inp_name[128] = "[";
+			strcat(inp_name,room);
+			strcat(inp_name,"] ");
+			strcat(inp_name,user);
+			strcat(inp_name,": ");
+			
+			char buffer[128];
+
+			fd = 0;
+			
+			fgets(buffer,128,stdin);
+			strcat(inp_name,buffer);
+			strcat(inp_name,"\n");
+			strcat(inp_name,"\0");	
+			d = opendir(roompath);
+			
+			if(d){
+				
+				while((dir = readdir(d)) != NULL){
+
+					if((strcmp(dir->d_name,user) != 0) && (strcmp(dir->d_name,".") != 0) && (strcmp(dir->d_name,"..")!= 0)) {
+						char otherbuf[128];
+						
+						strcpy(otherbuf,roompath);
+						strcat(otherbuf,dir->d_name);
+						fd = open(otherbuf,O_WRONLY);
+						write(fd,inp_name,strlen(inp_name));
+						
+					}
+				}
+
+			}
+			
+			}		
+		}
+	
+
+	return SUCCESS;
+
+
+} 
 int process_command(struct command_t *command);
 
 int pipe_handler(struct command_t *command) {
@@ -411,6 +556,19 @@ int process_command(struct command_t *command)
 				printf("-%s: %s: %s\n", sysname, command->name, strerror(errno));
 			return SUCCESS;
 		}
+	}
+
+	if(strcmp(command->name,"wiseman") == 0){
+
+
+		return wiseman(command);
+	
+	}
+
+	if(strcmp(command->name,"chatroom") ==0){
+
+		return chatroom(command);
+
 	}
 
 	pid_t pid=fork();
