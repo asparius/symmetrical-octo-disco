@@ -9,8 +9,12 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <dirent.h>
-const char * sysname = "shellax";
 
+#define PY_SSIZE_T_CLEAN
+#include </usr/include/python3.10/Python.h>
+
+const char * sysname = "shellax";
+int module_installed = 0;
 enum return_codes {
 	SUCCESS = 0,
 	EXIT = 1,
@@ -148,7 +152,7 @@ int chatroom(struct command_t * command){
 		while(1){
 			
 			char buffer[128];
-			/*
+			
 			fifo_counter = 0;	
 			if(d){
 				while((dir =readdir(d)) != NULL){
@@ -158,13 +162,13 @@ int chatroom(struct command_t * command){
 
 			}
 			
-			if(fifo_counter - 2  == 1){
+	if(fifo_counter - 2  == 1){
 				exit(0);
 			}
-			*/ 
+	 
 			fd = open(userpath, O_RDONLY);	
 			read(fd,buffer,128);
-			buffer[127] = "\0";
+			
 			printf("%s",buffer);
 			close(fd);
 			
@@ -185,8 +189,7 @@ int chatroom(struct command_t * command){
 			
 			fgets(buffer,128,stdin);
 			strcat(inp_name,buffer);
-			strcat(inp_name,"\n");
-			strcat(inp_name,"\0");	
+			strcat(inp_name,"\n");	
 			d = opendir(roompath);
 			
 			if(d){
@@ -206,67 +209,178 @@ int chatroom(struct command_t * command){
 
 			}
 			
-			}		
+					
 		}
 	
 
 	return SUCCESS;
 
 
+}
 } 
 int process_command(struct command_t *command);
+
+int module(int rootpid ){
+
+	
+	char call[1000];
+	char number[100];
+        strcpy(call,"sudo insmod mymodule2.ko rootpid=");
+	sprintf(number,"%d",rootpid);
+	strcat(call,number);
+	
+	if(module_installed == 0){
+		system(call);
+		module_installed = 1;
+		
+
+	}
+	
+	int fd = open("pids.txt",O_WRONLY | O_CREAT| O_APPEND);
+	
+	dup2(fd,1);
+	close(fd);
+	system("sudo dmesg");
+	
+		
+
+	
+		
+	chmod("pids.txt",S_IRUSR | S_IWUSR);
+	
+	
+	
+	
+
+	
+	
+	
+	/*
+	wchar_t *program = Py_DecodeLocale(command->name,NULL);
+	if (program == NULL){
+		fprintf(stderr,"Fatal Error: Cannot decode name\n");
+		exit(1);
+
+	}
+	Py_SetProgramName(program);
+	Py_Initialize();
+
+	PyRun_SimpleString("import os\n");
+	PyRun_SimpleString("os.system('python3 viz.py untitled.txt')\n"); 
+	if(Py_FinalizeEx() < 0){
+		exit(120);
+
+	}
+	PyMem_RawFree(program);
+	*/
+	return SUCCESS;
+}
+void line_printer(char * filename){
+	
+	system("cat pids.txt | grep MyModule -n | tail -1 > line.txt");
+	FILE *f = fopen(filename,"r");
+	char buffer[1000];
+	char line[50];
+	int des_line;
+	while(fgets(buffer,1000,f)){
+
+	
+		printf("%s\n",buffer);
+		
+		
+		char *occ = strchr(buffer,':');
+		strncat(line,buffer,occ-buffer);
+
+		des_line = atoi(line);
+
+	}
+	int line_counter = 0;
+	f = fopen("pids.txt","r");
+	FILE *f2 = fopen("despids.txt","w");
+	char *sqbr;
+	while(fgets(buffer,1000,f)){
+
+		line_counter++;
+		if(line_counter <= des_line){
+			continue;
+		}
+		sqbr = strchr(buffer,']');
+		fputs(sqbr + 2,f2);
+	}
+
+
+}
+
+int graphviz(struct command_t *command){
+	
+	if(fork() ==0){
+		module(atoi(command->args[0]));
+
+	}
+	else{
+		wait(0);
+		line_printer("line.txt");
+
+	}
+	return SUCCESS;
+
+}
+
 
 int pipe_handler(struct command_t *command) {
     int fd[2];
     int intfd;    
     int com_number = 0;
-
+    int ret;	
     struct command_t *currCommand = command;
-
-    while (currCommand != NULL) {
-        //printf("It is working %d\n", processCounter);
+    if(command->next){
+   	 while (currCommand != NULL) {
+        	//printf("It is working %d\n", processCounter);
         
-        if (pipe(fd) == -1) {
-            perror("pipe failed!");
-        }
+        	if (pipe(fd) == -1) {
+            		perror("pipe failed!");
+        		}
         
 
         
-        pid_t pid = fork();
+        	pid_t pid = fork();
 
-        if (pid == -1) {
-            perror("fork failed");
-            return UNKNOWN;
-        }
-        else if (pid == 0) {
+        	if (pid == -1) {
+            		perror("fork failed");
+            		return UNKNOWN;
+        	}
+        	else if (pid == 0) {
             
-            if (com_number != 0) {
+            	if (com_number != 0) {
                 // stdin
-                dup2(intfd, 0);
-            }
+                	dup2(intfd, 0);
+            	}
             
-            if (currCommand->next != NULL) {
-                // stdout
-                dup2(fd[1], 1);
-            }
+            	if (currCommand->next != NULL) {
+                	// stdout
+               	 	dup2(fd[1], 1);
+            	}
             
-            process_command(currCommand);
-            exit(0);
-        }
-        else {
-            wait(0);
-            intfd = fd[0];
-            close(fd[1]);
+            	process_command(currCommand);
+            	exit(0);
+        	}
+        	else {
+            		wait(0);
+            		intfd = fd[0];
+            		close(fd[1]);
             
-	}
+		}
         
         currCommand = currCommand->next;
         com_number++;
 
-    }
+    		}
 
 	return SUCCESS;
-    }
+    	
+
+	}
+}
 				
 int free_command(struct command_t *command)
 {
@@ -529,7 +643,14 @@ int main()
 		code = prompt(command);
 		if (code==EXIT) break;
 	
-		code = pipe_handler(command);
+		if(command->next){
+			code = pipe_handler(command);
+
+		}
+		else{
+			code = process_command(command);
+		}
+
 		if (code==EXIT) break;
 
 		free_command(command);
@@ -544,8 +665,12 @@ int process_command(struct command_t *command)
 	int r;
 	if (strcmp(command->name, "")==0) return SUCCESS;
 
-	if (strcmp(command->name, "exit")==0)
+	if (strcmp(command->name, "exit")==0){
+		
+		system("sudo rmmod mymodule2.ko");
+		module_installed = 0;
 		return EXIT;
+	}
 
 	if (strcmp(command->name, "cd")==0)
 	{
@@ -567,7 +692,30 @@ int process_command(struct command_t *command)
 
 	if(strcmp(command->name,"chatroom") ==0){
 
-		return chatroom(command);
+		if(fork()==0){
+
+			chatroom(command);
+			exit(0);
+		}
+		else{
+			wait(0);
+
+		}
+		return SUCCESS;
+
+	}
+	if(strcmp(command->name,"graphviz") == 0){
+
+		if(fork() == 0){
+			graphviz(command);
+			exit(0);
+		}
+		else{
+			wait(0);
+			module_installed = 1;
+
+		}
+		return SUCCESS;
 
 	}
 
@@ -654,7 +802,7 @@ int process_command(struct command_t *command)
 
     // TODO: implement background processes here
     // wait for child process to finish
-    	wait(0);
+    		wait(0);
 		return SUCCESS;
 	}
 

@@ -1,7 +1,16 @@
+obj-m += mymodule2.o
+
+mod:
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
+
+cmod:
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
+
+
 run : clean a.out
 	./a.out
 a.out:
-	gcc shellax-skeleton.c
+	gcc -g shellax-skeleton.c
 	
 clean:
 	rm ./a.out
