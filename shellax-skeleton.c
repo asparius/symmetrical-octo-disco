@@ -110,6 +110,151 @@ int wiseman(struct command_t * command){
 
 }
 
+int saitama(struct command_t * command){
+	
+	int line;
+	char c;
+	FILE *fptr;
+	fptr = fopen("saitama.txt","r");
+		
+	if (fptr == NULL){
+
+    printf("Cannot open file \n");
+    exit(0);
+
+    }
+  
+    c = fgetc(fptr);
+	line = 0;
+
+	while (c != EOF){
+        printf ("%c", c);
+        c = fgetc(fptr);
+
+		if(c=='\n'){
+			line+=1;
+		}
+
+		if(line == 9){
+			printf("\n⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡤⠀⠄⠀⠀⠀⠀⠀⠈⢷⠒⠊⠉⠉⡍⠉⣽⠀⠀⢀⢸⡉⠉⠹⢉⠉⣹⠃⣿⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀");
+			printf("%s", command->args[0]);
+			line+=1;
+		}
+    }
+
+    fclose(fptr);
+
+return SUCCESS;
+}
+
+int uniq(struct command_t * command){
+
+	printf("\n");
+
+	int counter;
+	int wordCounter = 1;
+
+	if(command->args[0] == NULL){
+
+		printf("Enter inputs next time Sherlock\n");
+		return SUCCESS;
+
+	}else if((!(strcmp(command->args[(command->arg_count)-1],"-c"))) && (command->arg_count == 1)){
+
+		printf("Enter inputs next time Sherlock\n");
+		return SUCCESS;
+
+	}else if((!(strcmp(command->args[(command->arg_count)-1],"--count"))) && (command->arg_count == 1)){
+
+		printf("Enter inputs next time Sherlock\n");
+		return SUCCESS;
+		
+	}else if(!(strcmp(command->args[(command->arg_count)-1],"-c"))){
+		
+		wordCounter = 1;
+
+		for(counter = 0; counter < (command->arg_count)-1 ; counter++){
+
+			if(strcmp(command->args[counter], command->args[counter+1])){
+				
+				printf("%d %s\n",wordCounter, command->args[counter]);
+				wordCounter = 1;
+
+			}else{
+				
+				wordCounter++;
+				
+				}
+		}
+		
+		return SUCCESS;
+
+	}else if(!(strcmp(command->args[(command->arg_count)-1],"--count"))){
+		
+		wordCounter = 1;
+
+		for(counter = 0; counter < (command->arg_count)-1 ; counter++){
+
+			if(strcmp(command->args[counter], command->args[counter+1])){
+				
+				printf("%d %s\n",wordCounter, command->args[counter]);
+				wordCounter = 1;
+
+			}else{
+				
+				wordCounter++;
+				
+				}
+		}
+		
+		return SUCCESS;
+
+	}else{
+
+		if(command->arg_count == 1){
+
+				printf("%s\n", command->args[counter]);
+
+		}else if(command->arg_count == 2){
+			
+			if(strcmp(command->args[0], command->args[1])){
+				printf("%s\n", command->args[0]);
+				printf("%s\n", command->args[1]);
+			}else{
+				printf("%s\n", command->args[0]);
+			}
+
+		}else{
+		
+		for(counter = 0; counter < (command->arg_count)-2 ; counter++){
+
+			if(strcmp(command->args[counter], command->args[counter+1])){
+				
+				printf("%s\n", command->args[counter]);
+
+			}
+
+		}
+
+		if(!(strcmp(command->args[counter], command->args[counter+1]))){
+
+				printf("%s\n", command->args[counter]);
+
+		}else{
+
+			printf("%s\n", command->args[counter]);
+			printf("%s\n", command->args[counter+1]);
+
+		}
+
+		return SUCCESS;
+
+	}}
+
+	return SUCCESS;
+	
+}
+
 int chatroom(struct command_t * command){
 
 	char * room = command->args[0];
@@ -161,13 +306,13 @@ int chatroom(struct command_t * command){
 			if(fifo_counter - 2  == 1){
 				exit(0);
 			}
-			*/ 
+			
 			fd = open(userpath, O_RDONLY);	
 			read(fd,buffer,128);
 			buffer[127] = "\0";
 			printf("%s",buffer);
 			close(fd);
-			
+			*/ 
 		}
 	}
 	else{
@@ -568,6 +713,18 @@ int process_command(struct command_t *command)
 	if(strcmp(command->name,"chatroom") ==0){
 
 		return chatroom(command);
+
+	}
+
+	if(strcmp(command->name,"uniq") ==0){
+
+		return uniq(command);
+
+	}
+
+	if(strcmp(command->name,"saitama") ==0){
+
+		return saitama(command);
 
 	}
 
