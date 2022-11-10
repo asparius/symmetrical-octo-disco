@@ -145,32 +145,27 @@ int chatroom(struct command_t * command){
         		}
 	
 	}
-	printf("Welcome to comp304!\n");	
+	printf("Welcome to %s!\n",room);	
 	
 	
 	if (fork() == 0){
+		fd = open(userpath, O_RDONLY);	
 		while(1){
 			
 			char buffer[128];
 			
-			fifo_counter = 0;	
-			if(d){
-				while((dir =readdir(d)) != NULL){
-					fifo_counter++;
-					
-				}
+			
+			
+	
+	 	
+			int res = read(fd,buffer,128);
+			if(res == -1 || res == 0){
+				//printf("%d\n",errno);
 
 			}
-			
-	if(fifo_counter - 2  == 1){
-				exit(0);
+			else{	
+				printf("%s\r",buffer);
 			}
-	 
-			fd = open(userpath, O_RDONLY);	
-			read(fd,buffer,128);
-			
-			printf("%s",buffer);
-			close(fd);
 			
 		}
 	}
@@ -186,10 +181,12 @@ int chatroom(struct command_t * command){
 			char buffer[128];
 
 			fd = 0;
+		
+			printf("%s",inp_name);
 			
 			fgets(buffer,128,stdin);
 			strcat(inp_name,buffer);
-			strcat(inp_name,"\n");	
+			strcat(inp_name,"\r");	
 			d = opendir(roompath);
 			
 			if(d){
@@ -197,26 +194,30 @@ int chatroom(struct command_t * command){
 				while((dir = readdir(d)) != NULL){
 
 					if((strcmp(dir->d_name,user) != 0) && (strcmp(dir->d_name,".") != 0) && (strcmp(dir->d_name,"..")!= 0)) {
+					if(fork() == 0){
 						char otherbuf[128];
 						
 						strcpy(otherbuf,roompath);
 						strcat(otherbuf,dir->d_name);
 						fd = open(otherbuf,O_WRONLY);
 						write(fd,inp_name,strlen(inp_name));
-						
-					}
-				}
+						close(fd);
+						exit(0);
+						}
+					
+			}
 
 			}
 			
 					
 		}
 	
-
+		}
+	}
 	return SUCCESS;
 
 
-}
+
 } 
 int process_command(struct command_t *command);
 
@@ -251,78 +252,191 @@ int module(int rootpid ){
 	
 	
 	
-
-	
-	
-	
-	/*
-	wchar_t *program = Py_DecodeLocale(command->name,NULL);
-	if (program == NULL){
-		fprintf(stderr,"Fatal Error: Cannot decode name\n");
-		exit(1);
-
-	}
-	Py_SetProgramName(program);
-	Py_Initialize();
-
-	PyRun_SimpleString("import os\n");
-	PyRun_SimpleString("os.system('python3 viz.py untitled.txt')\n"); 
-	if(Py_FinalizeEx() < 0){
-		exit(120);
-
-	}
-	PyMem_RawFree(program);
-	*/
 	return SUCCESS;
 }
 void line_printer(char * filename){
-	
-	system("cat pids.txt | grep MyModule -n | tail -1 > line.txt");
-	FILE *f = fopen(filename,"r");
-	char buffer[1000];
-	char line[50];
-	int des_line;
-	while(fgets(buffer,1000,f)){
-
-	
-		printf("%s\n",buffer);
+	char call[1000];
+	if(fork()==0){
+		strcpy(call,"cat pids.txt | grep MyModule -n | tail -1 > ");
+		strcat(call,filename);
 		
 		
-		char *occ = strchr(buffer,':');
-		strncat(line,buffer,occ-buffer);
-
-		des_line = atoi(line);
-
+		system(call);
+		exit(1);
 	}
-	int line_counter = 0;
-	f = fopen("pids.txt","r");
-	FILE *f2 = fopen("despids.txt","w");
-	char *sqbr;
-	while(fgets(buffer,1000,f)){
+	else{
+		wait(0);
+		FILE *f = fopen(filename,"r");
+		char buffer[1000];
+		char line[50];
+		int des_line;
+		while(fgets(buffer,1000,f)){
 
-		line_counter++;
-		if(line_counter <= des_line){
-			continue;
+	
+			
+		
+		
+			char *occ = strchr(buffer,':');
+			
+			strncat(line,buffer,occ-buffer);
+
+			des_line = atoi(line);
+
 		}
-		sqbr = strchr(buffer,']');
-		fputs(sqbr + 2,f2);
+		int line_counter = 0;
+		f = fopen("pids.txt","r");
+		FILE *f2 = fopen("despids.txt","w");
+		char *sqbr;
+			
+		
+		while(fgets(buffer,1000,f)){
+			
+			line_counter++;
+			if(line_counter > des_line){
+				sqbr = strchr(buffer,']');
+		
+				fputs(sqbr + 2,f2);
+			
+			}
+			
 	}
 
 
 }
+}
 
+void fn_caller(char* flag,char *filename){
+
+		wchar_t *program = Py_DecodeLocale("Dummy",NULL);
+		if (program == NULL){
+			fprintf(stderr,"Fatal Error: Cannot decode name\n");
+			exit(1);
+
+			}
+		Py_SetProgramName(program);
+		Py_Initialize();
+
+		PyRun_SimpleString("import os\n");;
+		char buffer[100];
+		char flagbuff[10];
+		strcpy(buffer,"os.system('python3 viz.py ");
+		strcpy(flagbuff,flag);
+		strcat(buffer,flag);
+		strcat(buffer, " ");
+		strcat(buffer,filename);
+		strcat(buffer,"')\n");
+		PyRun_SimpleString(buffer);
+
+		if(Py_FinalizeEx() < 0){
+			exit(120);
+
+		}
+		PyMem_RawFree(program);
+
+}
 int graphviz(struct command_t *command){
 	
-	if(fork() ==0){
-		module(atoi(command->args[0]));
+	char filename[1000];
+	char flag[100];
 
+	if(strcmp(command->args[0],"-e") && strcmp(command->args[0],"-y")){
+		printf("Invalid flag!\n");
+		return 1;
+	}
+	
+	
+
+
+	strcpy(filename,command->args[1]);
+	strcpy(flag,command->args[0]);
+	
+	if(fork() == 0){
+		fn_caller(flag,filename);
 	}
 	else{
 		wait(0);
+		remove("process.gv");
+		rename("process.gv.png",command->args[2]);
+	}	
+	return SUCCESS;
+
+
+}
+int free_command(struct command_t *command);
+int parse_command(char *buf, struct command_t *command);
+int psvis(struct command_t *command){
+		
+
+	if(fork() ==0){
+		module(atoi(command->args[0]));
+		exit(1);
+	}
+	else{
+		wait(0);
+		
+				
+	}
+
+	if(fork()==0){
+
 		line_printer("line.txt");
+		
+		exit(1);
+	}
+	else{
+
+		wait(0);
 
 	}
+
+	if(fork()==0){
+		
+		struct command_t *com=malloc(sizeof(struct command_t));
+		memset(com, 0, sizeof(struct command_t)); // set all bytes to 0
+		com->name = "graphviz";
+		com->args=(char **)malloc(sizeof(char *));
+		for(int arg_index = 0; arg_index < 3;arg_index++){
+		
+
+		
+			com->args[arg_index]=(char *)malloc(100);
+		}
+		strncpy(com->args[0],"-e",strlen("-e"));
+
+		strncpy(com->args[1], "despids.txt",strlen("despids.txt"));
+		strncpy(com->args[2], command->args[1],strlen(command->args[1]));
+		com->args[2] = command->args[1];	
+		
+		process_command(com);
+		
+		for(int arg_index = 0; arg_index < 3;arg_index++){
+			free(com->args[arg_index]);
+		}
+		free(com->args);
+		free(com); 
+		exit(1);
+			
+	
+	}
+	else{
+
+		wait(0);
+		
+		remove("pids.txt");
+		remove("line.txt");
+		remove("despids.txt");
+
+	}
+		
+		
 	return SUCCESS;
+
+}
+int rehandler(struct command_t *command){
+
+	 
+
+
 
 }
 
@@ -335,7 +449,6 @@ int pipe_handler(struct command_t *command) {
     struct command_t *currCommand = command;
     if(command->next){
    	 while (currCommand != NULL) {
-        	//printf("It is working %d\n", processCounter);
         
         	if (pipe(fd) == -1) {
             		perror("pipe failed!");
@@ -376,7 +489,7 @@ int pipe_handler(struct command_t *command) {
 
     		}
 
-	return SUCCESS;
+		return SUCCESS;
     	
 
 	}
@@ -632,6 +745,51 @@ int prompt(struct command_t *command)
   	return SUCCESS;
 }
 
+int re_handler(struct command_t *command){
+	if(command->redirects[0] == NULL && command->redirects[1] == NULL && command->redirects[2] == NULL){
+		printf("I dont have redirects,Do I?\n");
+
+	}
+
+	else{
+
+
+		if(command->redirects[0] != NULL && command->redirects[1] != NULL && command->redirects[2] != NULL){
+			printf("Invalid Command!\n");
+			return SUCCESS;
+		}
+
+		else{
+			int write = -1;
+			int read = -1;
+			int append = -1;
+			for(int i = 0; i < command->arg_count;i++){
+				printf("Command args[%d]:%s\n",i,command->args[i]);
+				if(command->args[i] == " <"){
+
+					read = i;
+				}
+				if(command->args[i] == " >"){
+					write = i;
+				}
+				if(command->args[i] == " >>"){
+
+					append = i;
+				}
+
+			}
+			printf("Indices, read : %d,write:%d,append:%d\n",read,write,append);
+
+			
+		
+
+		}
+
+
+
+	}
+	
+}
 int main()
 {
 	while (1)
@@ -648,6 +806,7 @@ int main()
 
 		}
 		else{
+			re_handler(command);
 			code = process_command(command);
 		}
 
@@ -714,6 +873,20 @@ int process_command(struct command_t *command)
 			wait(0);
 			module_installed = 1;
 
+		}
+		return SUCCESS;
+
+	}
+
+	if(strcmp(command->name, "psvis") == 0){
+		if(fork() == 0){
+
+			psvis(command);
+			exit(0);
+		}
+		else{
+
+			wait(0);
 		}
 		return SUCCESS;
 
@@ -793,6 +966,7 @@ int process_command(struct command_t *command)
 			}
 
 		}
+		return SUCCESS;
 		
 		/// TODO: do your own exec with path resolving using execv()
 	}

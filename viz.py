@@ -21,12 +21,20 @@ except:
     
 dot = graphviz.Digraph('process', format = 'png')
 
-data = pd.read_table(sys.argv[1],names=["id","pid","time"],delimiter=",")
+data = pd.read_table(sys.argv[2],names=["id","pid","time"],delimiter=",")
 
 dot.node(str(int(data.iloc[0].id)))
 
 for i in range(1,len(data)):
-    dot.node(str(int(data.iloc[i].id)))
+    if(sys.argv[1] == "-y"):
+        max_time = data[data["pid"] == data.iloc[i].pid].time.max()
+        if(data.iloc[i].time == max_time):
+            dot.node(str(int(data.iloc[i].id)),color = "blue")
+    elif(sys.argv[1] == "-e"):
+        min_time = data[data["pid"] == data.iloc[i].pid].time.min()
+        if(data.iloc[i].time == min_time):
+            dot.node(str(int(data.iloc[i].id)),color = "red")
+    
     dot.edge(str(int(data.iloc[i].pid)),str(int(data.iloc[i].id)))
 
 dot.render()

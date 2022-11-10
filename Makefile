@@ -10,7 +10,7 @@ cmod:
 run : clean a.out
 	./a.out
 a.out:
-	gcc -g shellax-skeleton.c
+	gcc -I/usr/include/python3.10 shellax-skeleton.c -L/usr/lib/Python3.10/config-3.10-x86_64-linux-gnu -lpython3.10
 	
 clean:
 	rm ./a.out
