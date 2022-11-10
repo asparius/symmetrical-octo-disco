@@ -31,6 +31,9 @@ struct command_t {
 	struct command_t *next; // for piping
 };
 
+
+
+
 /**
  * Prints a command struct
  * @param struct command_t *
@@ -55,27 +58,7 @@ void print_command(struct command_t * command)
 
 
 }
-/**
- * Release allocated memory of a command
- * @param  command [description]
- * @return         [description]
- */
 
-void io_handler(struct command_t * command){
-
-	int redirect_index = 0;
-	while(redirect_index < 3){
-
-		if(command->redirects[redirect_index] != NULL){
-			break;	
-		}
-
-		redirect_index++;
-	}
-	print_command(command);
-	printf("%s\n",command->args[command->arg_count -1]);
-
-}
 
 int wiseman(struct command_t * command){
 
@@ -145,6 +128,11 @@ int chatroom(struct command_t * command){
         		}
 	
 	}
+	char inp_name[128] = "[";
+	strcat(inp_name,room);
+	strcat(inp_name,"] ");
+	strcat(inp_name,user);
+	strcat(inp_name,": ");
 	printf("Welcome to %s!\n",room);	
 	
 	
@@ -155,38 +143,54 @@ int chatroom(struct command_t * command){
 			char buffer[128];
 			
 			
-			
-	
-	 	
+
+
+		
+		
+	 		
 			int res = read(fd,buffer,128);
 			if(res == -1 || res == 0){
 				//printf("%d\n",errno);
 
 			}
 			else{	
-				printf("%s\r",buffer);
+				printf("\r%s",buffer);
+				
+				printf("%s",inp_name);	
+				fflush(stdout);
 			}
 			
 		}
 	}
-	else{
-		while(1){
+	else
+	{       
+		char inp[128];
+
+		char inp_name[256] = "[";
+		strcat(inp_name,room);
+		strcat(inp_name,"] ");
+		strcat(inp_name,user);
+		strcat(inp_name,": ");
+		strcpy(inp,inp_name);
+		printf("%s",inp);
 			
-			char inp_name[128] = "[";
+		fflush(stdout);
+
+		while(1){
+			char inp_name[256] = "[";
 			strcat(inp_name,room);
 			strcat(inp_name,"] ");
 			strcat(inp_name,user);
 			strcat(inp_name,": ");
-			
-			char buffer[128];
-
-			fd = 0;
 		
-			printf("%s",inp_name);
+	
 			
+			char buffer[128];	
+			//char *buffers = calloc(sizeof(char), 128);
 			fgets(buffer,128,stdin);
-			strcat(inp_name,buffer);
-			strcat(inp_name,"\r");	
+			
+			strncat(inp_name,buffer,128);
+				
 			d = opendir(roompath);
 			
 			if(d){
@@ -200,7 +204,8 @@ int chatroom(struct command_t * command){
 						strcpy(otherbuf,roompath);
 						strcat(otherbuf,dir->d_name);
 						fd = open(otherbuf,O_WRONLY);
-						write(fd,inp_name,strlen(inp_name));
+					
+						write(fd,inp_name,strlen(inp_name ) + 1);
 						close(fd);
 						exit(0);
 						}
@@ -208,9 +213,14 @@ int chatroom(struct command_t * command){
 			}
 
 			}
+		
+				
 			
 					
 		}
+		 
+		 printf("%s",inp);
+		 fflush(stdout);
 	
 		}
 	}
@@ -219,6 +229,8 @@ int chatroom(struct command_t * command){
 
 
 } 
+
+
 int process_command(struct command_t *command);
 
 int module(int rootpid ){
@@ -254,55 +266,52 @@ int module(int rootpid ){
 	
 	return SUCCESS;
 }
-void line_printer(char * filename){
+
+
+void line_printer(char *filename)
+{
 	char call[1000];
-	if(fork()==0){
-		strcpy(call,"cat pids.txt | grep MyModule -n | tail -1 > ");
-		strcat(call,filename);
-		
-		
+	if (fork() == 0)
+	{
+		strcpy(call, "cat pids.txt | grep MyModule -n | tail -1 > ");
+		strcat(call, filename);
+
 		system(call);
 		exit(1);
 	}
-	else{
+	else
+	{
 		wait(0);
-		FILE *f = fopen(filename,"r");
+		FILE *f = fopen(filename, "r");
 		char buffer[1000];
 		char line[50];
 		int des_line;
-		while(fgets(buffer,1000,f)){
+		while (fgets(buffer, 1000, f))
+		{
 
-	
-			
-		
-		
-			char *occ = strchr(buffer,':');
-			
-			strncat(line,buffer,occ-buffer);
+			char *occ = strchr(buffer, ':');
+
+			strncat(line, buffer, occ - buffer);
 
 			des_line = atoi(line);
-
 		}
 		int line_counter = 0;
-		f = fopen("pids.txt","r");
-		FILE *f2 = fopen("despids.txt","w");
+		f = fopen("pids.txt", "r");
+		FILE *f2 = fopen("despids.txt", "w");
 		char *sqbr;
-			
-		
-		while(fgets(buffer,1000,f)){
-			
+
+		while (fgets(buffer, 1000, f))
+		{
+
 			line_counter++;
-			if(line_counter > des_line){
-				sqbr = strchr(buffer,']');
-		
-				fputs(sqbr + 2,f2);
-			
+			if (line_counter > des_line)
+			{
+				sqbr = strchr(buffer, ']');
+
+				fputs(sqbr + 2, f2);
 			}
-			
+		}
 	}
-
-
-}
 }
 
 void fn_caller(char* flag,char *filename){
@@ -334,6 +343,8 @@ void fn_caller(char* flag,char *filename){
 		PyMem_RawFree(program);
 
 }
+
+
 int graphviz(struct command_t *command){
 	
 	char filename[1000];
@@ -432,14 +443,8 @@ int psvis(struct command_t *command){
 	return SUCCESS;
 
 }
-int rehandler(struct command_t *command){
 
-	 
-
-
-
-}
-
+int re_handler(struct command_t *command);
 
 int pipe_handler(struct command_t *command) {
     int fd[2];
@@ -474,7 +479,7 @@ int pipe_handler(struct command_t *command) {
                	 	dup2(fd[1], 1);
             	}
             
-            	process_command(currCommand);
+            	re_handler(currCommand);
             	exit(0);
         	}
         	else {
@@ -494,7 +499,13 @@ int pipe_handler(struct command_t *command) {
 
 	}
 }
-				
+
+
+
+
+
+
+
 int free_command(struct command_t *command)
 {
 	if (command->arg_count)
@@ -515,10 +526,15 @@ int free_command(struct command_t *command)
 	free(command);
 	return 0;
 }
-/**
- * Show the command prompt
- * @return [description]
- */
+
+
+
+
+
+
+
+
+
 int show_prompt()
 {
 	char cwd[1024], hostname[1024];
@@ -745,10 +761,16 @@ int prompt(struct command_t *command)
   	return SUCCESS;
 }
 
+
+
+
+
 int re_handler(struct command_t *command){
 	if(command->redirects[0] == NULL && command->redirects[1] == NULL && command->redirects[2] == NULL){
-		printf("I dont have redirects,Do I?\n");
+		
+		return process_command(command);
 
+	
 	}
 
 	else{
@@ -760,34 +782,62 @@ int re_handler(struct command_t *command){
 		}
 
 		else{
-			int write = -1;
-			int read = -1;
-			int append = -1;
-			for(int i = 0; i < command->arg_count;i++){
-				printf("Command args[%d]:%s\n",i,command->args[i]);
-				if(command->args[i] == " <"){
+		   if(fork() == 0){	
+			if(command->redirects[0] != NULL){
 
-					read = i;
-				}
-				if(command->args[i] == " >"){
-					write = i;
-				}
-				if(command->args[i] == " >>"){
+				
 
-					append = i;
-				}
+				int fd = open(command->redirects[0],O_RDONLY);
+
+				dup2(fd,STDIN_FILENO);
+				close(fd);
+			
 
 			}
-			printf("Indices, read : %d,write:%d,append:%d\n",read,write,append);
+
+			if(command->redirects[1] != NULL){
+
+				
+
+					int fd =open(command->redirects[1],O_CREAT | O_WRONLY,0777);
+					dup2(fd,STDOUT_FILENO);
+					close(fd);
+	
+			}
+
+			if(command->redirects[2] != NULL){
+
+				
+					
+					int fd = open(command->redirects[2],O_CREAT | O_WRONLY | O_APPEND,0777);
+					dup2(fd,STDOUT_FILENO);
+					close(fd);
+	
+
+			}
 
 			
+
+
+			process_command(command);
+
+			exit(0);
+		   
 		
 
-		}
+		  	 
+		   }
+		   else{
+
+			   wait(0);
+		   }
+	   		}	   
+		
 
 
+			}
+	return SUCCESS;
 
-	}
 	
 }
 int main()
@@ -806,8 +856,8 @@ int main()
 
 		}
 		else{
-			re_handler(command);
-			code = process_command(command);
+			code = re_handler(command);
+	
 		}
 
 		if (code==EXIT) break;
@@ -985,3 +1035,13 @@ int process_command(struct command_t *command)
 	printf("-%s: %s: command not found\n", sysname, command->name);
 	return UNKNOWN;
 }
+
+
+
+
+
+
+
+
+
+
