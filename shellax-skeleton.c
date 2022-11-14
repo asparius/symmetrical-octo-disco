@@ -97,6 +97,126 @@ int wiseman(struct command_t * command){
 
 }
 
+int saitama(struct command_t * command){
+    
+    int line;
+    char c;
+    FILE *fptr;
+    fptr = fopen("saitama.txt","r");
+        
+    if (fptr == NULL){
+
+    printf("Cannot open file \n");
+    exit(0);
+
+    }
+  
+    c = fgetc(fptr);
+    line = 0;
+
+    int counter;
+    char arguments[200]= "";
+
+    for(counter=0; counter<(command->arg_count); counter++){
+        
+        strcat(arguments, command->args[counter]);
+        strcat(arguments, " ");
+    }
+
+    while (c != EOF){
+        printf ("%c", c);
+        c = fgetc(fptr);
+
+        if(c=='\n'){
+            line+=1;
+        }
+
+        if(line == 9){
+            printf("\n⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡤⠀⠄⠀⠀⠀⠀⠀⠈⢷⠒⠊⠉⠉⡍⠉⣽⠀⠀⢀⢸⡉⠉⠹⢉⠉⣹⠃⣿⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀");
+            printf("%s", arguments);
+            line+=1;
+        }
+    }
+
+    fclose(fptr);
+
+return SUCCESS;
+}
+
+int uniq(struct command_t * command){
+
+    printf("\n");
+
+
+    int counter;
+    int wordCounter = 1;
+
+    if(command->args[0] == NULL){
+
+        printf("Enter inputs next time Sherlock\n");
+        return SUCCESS;
+
+    }else if(!(strcmp(command->args[(0)],"-c")) || !(strcmp(command->args[(0)],"--count"))){
+
+        printf("Enter inputs next time Sherlock\n");
+        return SUCCESS;
+
+    }else if(!strcmp(command->args[(command->arg_count)-1], "-c")){
+
+        wordCounter = 1;
+
+        for(counter = 0; counter < (command->arg_count)-1 ; counter++){
+
+            if(strcmp(command->args[counter], command->args[counter+1])){
+                
+                printf("%d %s\n",wordCounter, command->args[counter]);
+                wordCounter = 1;
+
+            }else{
+                
+                wordCounter++;
+                
+                }
+        }
+        
+        return SUCCESS;
+
+    }else if(!(strcmp(command->args[(command->arg_count)-1],"--count"))){
+        
+        wordCounter = 1;
+
+        for(counter = 0; counter < (command->arg_count)-1 ; counter++){
+
+            if(strcmp(command->args[counter], command->args[counter+1])){
+                
+                printf("%d %s\n",wordCounter, command->args[counter]);
+                wordCounter = 1;
+
+            }else{
+                
+                wordCounter++;
+                
+                }
+        }
+        
+        return SUCCESS;
+
+    }else{
+
+        for(counter = 0; counter < (command->arg_count)-1 ; counter++){
+
+            if(strcmp(command->args[counter], command->args[counter+1])){
+                
+                printf("%s\n", command->args[counter]);
+
+            }
+
+        }printf("%s\n", command->args[counter]);
+
+    }
+
+}
+
 int chatroom(struct command_t * command){
 
 	char * room = command->args[0];
