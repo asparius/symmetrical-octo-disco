@@ -145,75 +145,80 @@ return SUCCESS;
 
 int uniq(struct command_t * command){
 
-    printf("\n");
+   int uniq_lines = 0;
+   char buffer[1000];
+   char strarr[1000][1000];
+   int counts[1000] = {0};
+   bool uni= true;
+   int arg = 0;
+   FILE * fp;
+   if(realpath(command->args[arg],NULL) != NULL) {
+	fp = fopen(command->args[arg],"r");
+	if(fp == NULL){
+		printf("Could not read the file %s\n",command->args[arg]);
+		return SUCCESS;
+	}
+	arg++;
+	
+   }
+   else{
+	   fp = stdin;
+
+   }
 
 
-    int counter;
-    int wordCounter = 1;
 
-    if(command->args[0] == NULL){
+   while(fgets(buffer,1000,fp)){
 
-        printf("Enter inputs next time Sherlock\n");
-        return SUCCESS;
+		for(int i = 0; i < uniq_lines;i++){
+			if(strcmp(buffer,strarr[i]) == 0){
+				counts[i]++;
+				uni = false;
 
-    }else if(!(strcmp(command->args[(0)],"-c")) || !(strcmp(command->args[(0)],"--count"))){
 
-        printf("Enter inputs next time Sherlock\n");
-        return SUCCESS;
+			}
+		}
+		if(uni){
 
-    }else if(!strcmp(command->args[(command->arg_count)-1], "-c")){
+			strcpy(strarr[uniq_lines],buffer);
+			counts[uniq_lines] = 1;
+			uniq_lines++;
+		}
+		uni = true;
 
-        wordCounter = 1;
 
-        for(counter = 0; counter < (command->arg_count)-1 ; counter++){
 
-            if(strcmp(command->args[counter], command->args[counter+1])){
-                
-                printf("%d %s\n",wordCounter, command->args[counter]);
-                wordCounter = 1;
 
-            }else{
-                
-                wordCounter++;
-                
-                }
-        }
-        
-        return SUCCESS;
+	}
 
-    }else if(!(strcmp(command->args[(command->arg_count)-1],"--count"))){
-        
-        wordCounter = 1;
+   if (command->args[arg] == NULL){
+	
+	for(int i = 0; i < uniq_lines;i++){
+		printf("%s",strarr[i]);
 
-        for(counter = 0; counter < (command->arg_count)-1 ; counter++){
+	}
 
-            if(strcmp(command->args[counter], command->args[counter+1])){
-                
-                printf("%d %s\n",wordCounter, command->args[counter]);
-                wordCounter = 1;
+	return SUCCESS;
+    }
+    if(!strcmp(command->args[arg],"-c") || !strcmp(command->args[arg],"--count")){
 
-            }else{
-                
-                wordCounter++;
-                
-                }
-        }
-        
-        return SUCCESS;
+	    for(int i = 0; i < uniq_lines;i++){
 
-    }else{
-
-        for(counter = 0; counter < (command->arg_count)-1 ; counter++){
-
-            if(strcmp(command->args[counter], command->args[counter+1])){
-                
-                printf("%s\n", command->args[counter]);
-
-            }
-
-        }printf("%s\n", command->args[counter]);
+		    printf("\t%d %s",counts[i],strarr[i]);
+	    }
+    }
+    else{
+	printf("%s","Invalid flag\n");
+	printf("%s","This shell only support -c and --count flags\n");
+	return SUCCESS;
 
     }
+   
+
+      
+	
+
+    return SUCCESS;
 
 }
 
@@ -1057,6 +1062,18 @@ int process_command(struct command_t *command)
 		else{
 
 			wait(0);
+		}
+		return SUCCESS;
+
+	}
+	if(strcmp(command->name,"uniq") == 0){
+		if(fork() == 0){
+			uniq(command);
+			exit(0);
+		}
+		else{
+			wait(0);
+
 		}
 		return SUCCESS;
 
